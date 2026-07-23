@@ -354,3 +354,355 @@ a {
     animation: none !important;
   }
 }
+
+/* ===== Milestone 2: Submit Complaint form ===== */
+
+.submit-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+.page-head {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.page-head h1 {
+  font-size: clamp(24px, 4vw, 32px);
+  color: var(--teal-dark);
+  margin-bottom: 10px;
+}
+
+.page-sub {
+  color: var(--ink-soft);
+  font-size: 15px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: 0 12px 32px -20px rgba(23, 50, 46, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--teal-dark);
+}
+
+.section-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--teal);
+  flex-shrink: 0;
+}
+
+.section-divider {
+  height: 1px;
+  background: var(--border);
+}
+
+.form-card textarea,
+.form-card select,
+.form-card .address-input {
+  width: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.form-card textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+
+.form-card textarea:focus,
+.form-card select:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 1px;
+}
+
+.form-card .address-input {
+  background: var(--bg);
+  color: var(--ink-soft);
+  cursor: not-allowed;
+}
+
+.char-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.counter-hint {
+  color: #c9821f;
+}
+
+.upload-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--teal-dark);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+  justify-content: center;
+  min-width: 160px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.upload-btn:hover {
+  border-color: var(--teal);
+  background: #e4ece8;
+}
+
+.upload-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.image-preview-wrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.image-preview {
+  display: block;
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(23, 50, 46, 0.75);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.remove-image-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.remove-image-btn:hover {
+  background: var(--teal-dark);
+}
+
+.btn-outline {
+  background: var(--surface);
+  color: var(--teal-dark);
+  border: 1.5px solid var(--teal);
+}
+
+.btn-outline:hover {
+  background: var(--bg);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+}
+
+.coord-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.coord-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coord-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.coord-value {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--teal-dark);
+}
+
+.field-error {
+  font-size: 13px;
+  color: #b3452f;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.form-actions .btn {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* Preview card (after clicking Next) */
+.preview-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 24px;
+  box-shadow: 0 12px 32px -20px rgba(23, 50, 46, 0.35);
+  animation: fadeInUp 0.4s ease both;
+}
+
+.preview-image {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.preview-block {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.preview-block .preview-row-label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.preview-description {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.preview-row:last-of-type {
+  border-bottom: none;
+}
+
+.preview-row-label {
+  font-size: 13px;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+
+.preview-row-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: right;
+}
+
+.preview-note {
+  margin-top: 20px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .form-actions .btn {
+    min-width: 100%;
+  }
+
+  .coord-grid {
+    grid-template-columns: 1fr;
+  }
+}

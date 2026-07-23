@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
+import SubmitComplaint from './pages/SubmitComplaint'
 
 // Placeholder for routes that exist for navigation purposes but whose
 // pages are built in a later milestone. Kept inline since it isn't one
@@ -20,7 +21,7 @@ export default function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/submit" element={<ComingSoon title="Submit Complaint" />} />
+        <Route path="/submit" element={<SubmitComplaint />} />
         <Route path="/track" element={<ComingSoon title="Track Complaint" />} />
       </Routes>
     </BrowserRouter>
