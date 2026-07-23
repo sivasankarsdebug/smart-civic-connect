@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '../services/firebase'
+import { uploadImage } from '../services/cloudinary'
 
 const DEPARTMENTS = [
   'Roads',
@@ -12,6 +15,17 @@ const DEPARTMENTS = [
   'Parks',
   'Other',
 ]
+
+// Short, human-readable complaint IDs like "SCC-8F3K2P".
+// Avoids visually confusing characters (0/O, 1/I).
+function generateComplaintId() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return `SCC-${code}`
+}
 
 function IconUpload(props) {
   return (
@@ -77,7 +91,7 @@ function IconCheck(props) {
 }
 
 export default function SubmitComplaint() {
-  const [step, setStep] = useState('form') // 'form' | 'preview'
+  const [step, setStep] = useState('form') // 'form' | 'preview' | 'success'
 
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
@@ -91,11 +105,13 @@ export default function SubmitComplaint() {
 
   const [department, setDepartment] = useState('auto')
 
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [complaintId, setComplaintId] = useState(null)
+
   const galleryInputRef = useRef(null)
   const cameraInputRef = useRef(null)
 
-  // Revoke the object URL whenever it changes or the component unmounts,
-  // so we don't leak memory across selections.
   useEffect(() => {
     return () => {
       if (imagePreview) URL.revokeObjectURL(imagePreview)
@@ -155,6 +171,8 @@ export default function SubmitComplaint() {
     setLocation(null)
     setLocationError('')
     setDepartment('auto')
+    setSubmitError('')
+    setComplaintId(null)
     if (galleryInputRef.current) galleryInputRef.current.value = ''
     if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
@@ -163,6 +181,68 @@ export default function SubmitComplaint() {
     e.preventDefault()
     if (!isFormValid) return
     setStep('preview')
+  }
+
+  async function handleSubmit() {
+    setSubmitError('')
+    setSubmitting(true)
+    try {
+      const newComplaintId = generateComplaintId()
+      const imageUrl = await uploadImage(imageFile)
+
+      await setDoc(doc(db, 'complaints', newComplaintId), {
+        complaintId: newComplaintId,
+        description,
+        department: department === 'auto' ? 'Auto Detect' : department,
+        lat: location.lat,
+        lng: location.lng,
+        imageUrl,
+        status: 'Submitted',
+        createdAt: serverTimestamp(),
+      })
+
+      setComplaintId(newComplaintId)
+      setStep('success')
+    } catch (err) {
+      console.error(err)
+      setSubmitError('Something went wrong submitting your complaint. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (step === 'success') {
+    return (
+      <main className="submit-page">
+        <div className="page-head">
+          <p className="eyebrow">Success</p>
+          <h1>Complaint Submitted</h1>
+          <p className="page-sub">Your complaint has been recorded. Save this ID to track its progress.</p>
+        </div>
+
+        <div className="preview-card success-card">
+          <div className="success-icon">
+            <IconCheck />
+          </div>
+          <p className="success-id-label">Complaint ID</p>
+          <p className="success-id">{complaintId}</p>
+          <p className="preview-note">Status: Submitted</p>
+
+          <div className="form-actions">
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => {
+                handleReset()
+                setStep('form')
+              }}
+            >
+              Submit Another Complaint
+            </button>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   if (step === 'preview') {
@@ -174,7 +254,7 @@ export default function SubmitComplaint() {
         <div className="page-head">
           <p className="eyebrow">Review</p>
           <h1>Review Your Complaint</h1>
-          <p className="page-sub">Nothing has been submitted yet — check the details below.</p>
+          <p className="page-sub">Check the details below, then submit when you're ready.</p>
         </div>
 
         <div className="preview-card">
@@ -202,13 +282,30 @@ export default function SubmitComplaint() {
             <span className="preview-row-value">{departmentLabel}</span>
           </div>
 
-          <p className="preview-note">
-            This is a preview only — submission is enabled in a later milestone.
-          </p>
+          {submitError && <p className="field-error">{submitError}</p>}
 
           <div className="form-actions">
-            <button type="button" className="btn btn-outline" onClick={() => setStep('form')}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => setStep('form')}
+              disabled={submitting}
+            >
               <IconEdit /> Back to Edit
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <span className="spinner" /> Submitting…
+                </>
+              ) : (
+                'Submit Complaint'
+              )}
             </button>
           </div>
         </div>
