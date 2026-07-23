@@ -2,19 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { uploadImage } from '../services/cloudinary'
-
-const DEPARTMENTS = [
-  'Roads',
-  'Garbage',
-  'Drainage',
-  'Water Supply',
-  'Street Lights',
-  'Electricity',
-  'Public Transport',
-  'Health',
-  'Parks',
-  'Other',
-]
+import { DEPARTMENTS, suggestDepartment } from '../services/ai'
 
 // Short, human-readable complaint IDs like "SCC-8F3K2P".
 // Avoids visually confusing characters (0/O, 1/I).
@@ -90,6 +78,15 @@ function IconCheck(props) {
   )
 }
 
+function IconSparkle(props) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 3c.6 3.2 1.8 5 5 6-3.2 1-4.4 2.8-5 6-.6-3.2-1.8-5-5-6 3.2-1 4.4-2.8 5-6Z" />
+      <path d="M19 15c.3 1.4.9 2.1 2 2.5-1.1.4-1.7 1.1-2 2.5-.3-1.4-.9-2.1-2-2.5 1.1-.4 1.7-1.1 2-2.5Z" />
+    </svg>
+  )
+}
+
 export default function SubmitComplaint() {
   const [step, setStep] = useState('form') // 'form' | 'preview' | 'success'
 
@@ -104,6 +101,10 @@ export default function SubmitComplaint() {
   const [locationError, setLocationError] = useState('')
 
   const [department, setDepartment] = useState('auto')
+
+  const [aiSuggestion, setAiSuggestion] = useState(null) // { department, confidence } | null
+  const [analyzing, setAnalyzing] = useState(false)
+  const [aiError, setAiError] = useState('')
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -135,6 +136,15 @@ export default function SubmitComplaint() {
     if (cameraInputRef.current) cameraInputRef.current.value = ''
   }
 
+  function handleDescriptionChange(e) {
+    setDescription(e.target.value)
+    // A changed description invalidates any earlier AI suggestion.
+    if (aiSuggestion || aiError) {
+      setAiSuggestion(null)
+      setAiError('')
+    }
+  }
+
   function handleUseLocation() {
     if (!navigator.geolocation) {
       setLocationError('Geolocation is not supported by this browser.')
@@ -163,6 +173,22 @@ export default function SubmitComplaint() {
     )
   }
 
+  async function handleAnalyze() {
+    setAiError('')
+    setAnalyzing(true)
+    try {
+      const result = await suggestDepartment(description)
+      setAiSuggestion(result)
+      setDepartment(result.department)
+    } catch (err) {
+      console.error(err)
+      setAiSuggestion(null)
+      setAiError(err.message || 'Could not analyze the description. Please try again.')
+    } finally {
+      setAnalyzing(false)
+    }
+  }
+
   function handleReset() {
     setImageFile(null)
     setImagePreview(null)
@@ -171,6 +197,9 @@ export default function SubmitComplaint() {
     setLocation(null)
     setLocationError('')
     setDepartment('auto')
+    setAiSuggestion(null)
+    setAnalyzing(false)
+    setAiError('')
     setSubmitError('')
     setComplaintId(null)
     if (galleryInputRef.current) galleryInputRef.current.value = ''
@@ -246,8 +275,7 @@ export default function SubmitComplaint() {
   }
 
   if (step === 'preview') {
-    const departmentLabel =
-      department === 'auto' ? 'Auto Detect (assigned in Milestone 4)' : department
+    const departmentLabel = department === 'auto' ? 'Not selected' : department
 
     return (
       <main className="submit-page">
@@ -386,7 +414,7 @@ export default function SubmitComplaint() {
           <textarea
             id="description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={handleDescriptionChange}
             onBlur={() => setDescTouched(true)}
             maxLength={500}
             rows={4}
@@ -462,6 +490,47 @@ export default function SubmitComplaint() {
         <div className="section-divider" />
 
         <section className="form-section">
+          <span className="section-label">
+            <IconSparkle className="section-icon" /> AI Department Suggestion
+          </span>
+
+          <button
+            type="button"
+            className="btn btn-outline"
+            onClick={handleAnalyze}
+            disabled={!isDescriptionValid || analyzing}
+          >
+            {analyzing ? (
+              <>
+                <span className="spinner" /> Analyzing…
+              </>
+            ) : (
+              <>
+                <IconSparkle /> Analyze with AI
+              </>
+            )}
+          </button>
+
+          {descTouched && !isDescriptionValid && (
+            <p className="ai-hint">Write at least 15 characters in the description to analyze.</p>
+          )}
+
+          {aiError && <p className="field-error">{aiError}</p>}
+
+          {aiSuggestion && (
+            <div className="ai-suggestion-box">
+              <span className="ai-suggestion-label">Suggested Department:</span>
+              <span className="ai-suggestion-value">{aiSuggestion.department}</span>
+              <span className="ai-suggestion-confidence">
+                {Math.round(aiSuggestion.confidence * 100)}% confidence
+              </span>
+            </div>
+          )}
+        </section>
+
+        <div className="section-divider" />
+
+        <section className="form-section">
           <label className="section-label" htmlFor="department">
             <IconLayers className="section-icon" /> Department
           </label>
@@ -470,13 +539,16 @@ export default function SubmitComplaint() {
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
           >
-            <option value="auto">Auto Detect (Coming in Milestone 4)</option>
+            <option value="auto">Select department (or use AI above)</option>
             {DEPARTMENTS.map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>
             ))}
           </select>
+          {aiSuggestion && department === aiSuggestion.department && (
+            <p className="ai-hint">Auto-filled from the AI suggestion — change it above if needed.</p>
+          )}
         </section>
 
         <div className="form-actions">
