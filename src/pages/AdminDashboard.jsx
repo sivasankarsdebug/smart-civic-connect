@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { collection, doc, getDocs, updateDoc } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { DEPARTMENTS } from '../services/ai'
-
+import ComplaintsMap from '../components/ComplaintsMap'
 const STATUSES = ['Submitted', 'In Progress', 'Resolved']
 
 function formatTimestamp(ts) {
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
           <span className="summary-label">Resolved</span>
         </div>
       </div>
-
+      <ComplaintsMap complaints={complaints} />
       <div className="form-card">
         <div className="toolbar-row">
           <input

@@ -3,7 +3,8 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../services/firebase'
 import { uploadImage } from '../services/cloudinary'
 import { DEPARTMENTS, suggestDepartment } from '../services/ai'
-
+import { useReverseGeocode } from '../hooks/useReverseGeocode'
+import LocationMap from '../components/LocationMap'
 // Short, human-readable complaint IDs like "SCC-8F3K2P".
 // Avoids visually confusing characters (0/O, 1/I).
 function generateComplaintId() {
@@ -109,7 +110,14 @@ export default function SubmitComplaint() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [complaintId, setComplaintId] = useState(null)
-
+  const {
+    address,
+    loading: addressLoading,
+    error: addressError,
+  } = useReverseGeocode(
+    step === 'success' ? location?.lat : null,
+    step === 'success' ? location?.lng : null
+  )
   const galleryInputRef = useRef(null)
   const cameraInputRef = useRef(null)
 
@@ -169,7 +177,11 @@ export default function SubmitComplaint() {
           setLocationError('Could not fetch your location. Please try again.')
         }
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      }
     )
   }
 
@@ -256,7 +268,23 @@ export default function SubmitComplaint() {
           <p className="success-id-label">Complaint ID</p>
           <p className="success-id">{complaintId}</p>
           <p className="preview-note">Status: Submitted</p>
+          {addressLoading && (
+            <p className="ai-hint">Looking up address...</p>
+          )}
 
+          {addressError && (
+            <p className="field-error">{addressError}</p>
+          )}
+
+          {address && (
+            <p className="preview-note">{address}</p>
+          )}
+
+          <LocationMap
+            lat={location?.lat}
+            lng={location?.lng}
+            popupText={complaintId}
+          />
           <div className="form-actions">
             <button
               type="button"
